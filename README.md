@@ -19,20 +19,20 @@ supplied.
 
 ### Options
 
---quick
+`--quick`
 : Uses the size of files instead of calculating digests of the file's contents.
 Much faster, but less useful (see _Limitations_ section below).
 
---combine
+`--combine`
 : Combines results into a single value, being the total size of all files or digest of all digests.
 
---verbose
+`--verbose`
 : Show total number of files processed.
 
---output filename
+`--output` _filename_
 : Write output to specified file.
 
---help
+`--help`
 : Show a brief help message.
 
 These options can be abbreviated (e.g. `-c` for `--combine`).
@@ -103,35 +103,25 @@ length files.
 Requirements
 ------------
 
-The script requires Perl.
+The script requires [Perl](http://www.perl.org).
 
-To calculate SHA1 digests, one of the following must be available:
+To calculate SHA1 digests, at least one of the following is required:
 
-- The `Digest::SHA1` Perl module; or
-- The `openssl` program.
+- The [Digest::SHA1](http://search.cpan.org/~gaas/Digest-SHA1-2.13/SHA1.pm)
+  Perl module; or
+- The [openssl](http://www.openssl.org) program.
 
 If only the quick mode is used, neither of these dependencies are
-needed. The quick mode only examines file sizes and does not need to
+required. The quick mode only examines file sizes and does not need to
 calculate SHA1 digests.
 
-The Perl module is preferred because it is much faster than using the
-external program. If your installation of Perl does not include it,
-consider installing the module in your local account. Both produce the
-same output.
+Both produce the same output, but the Perl module is preferred because
+it is much faster than using the external program. If your
+installation of Perl does not have it, consider installing the module
+in your local account.
 
-
-Implementation
---------------
-
-The _rdigest.pl_ script will use the `Digest::SHA1` Perl module to
-calculate the SHA1 digests, if it is available. If it is not
-available, it will invoke the `openssl` program to calculate the SHA1
-digests.
-
-The Perl module is much faster than invoking an external program.
-
-To see which implementation is being used, run _rdigest.pl_ with the
-`--help` option.
+To see which SHA1 implementation will be used, run _rdigest.pl_ with
+the `--help` option.
 
 
 Known bugs
