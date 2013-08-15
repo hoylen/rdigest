@@ -35,6 +35,8 @@ Much faster, but less useful (see _Limitations_ section below).
 --help
 : Show a brief help message.
 
+These options can be abbreviated (e.g. `-c` for `--combine`).
+
 If neither the _quick_ or _combined_ modes are used, the SHA1 digests
 of all the files are calculated.
 
@@ -113,7 +115,9 @@ needed. The quick mode only examines file sizes and does not need to
 calculate SHA1 digests.
 
 The Perl module is preferred because it is much faster than using the
-external program. But both produce the same output.
+external program. If your installation of Perl does not include it,
+consider installing the module in your local account. Both produce the
+same output.
 
 
 Implementation
