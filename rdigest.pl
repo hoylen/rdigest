@@ -73,7 +73,7 @@ sub process_arguments {
   my $help;
 
   if (! GetOptions('verbose' => $verbose_ref,
-		   'combine' => $combined_ref,
+		   'combined' => $combined_ref,
 		   'quick' => $quick_ref,
 		   'output=s' => $output_ref,
 		   'help' => \$help)) {
