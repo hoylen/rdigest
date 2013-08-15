@@ -23,7 +23,7 @@ supplied.
 : Uses the size of files instead of calculating digests of the file's contents.
 Much faster, but less useful (see _Limitations_ section below).
 
-`--combine`
+`--combined`
 : Combines results into a single value, being the total size of all files or digest of all digests.
 
 `--verbose`
@@ -35,7 +35,7 @@ Much faster, but less useful (see _Limitations_ section below).
 `--help`
 : Show a brief help message.
 
-These options can be abbreviated (e.g. `-c` for `--combine`).
+These options can be abbreviated (e.g. `-c` for `--combined`).
 
 If neither the _quick_ or _combined_ modes are used, the SHA1 digests
 of all the files are calculated.
