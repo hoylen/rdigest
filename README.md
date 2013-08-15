@@ -2,30 +2,144 @@ rdigest
 =======
 
 Calculates digest of files recursively found under directories.
-Can be used to compare collections of files, to see if they
-are the same or not.
+
+This script is useful for comparing sets of files, to see if they are
+the same or not. If the output of the script is different, then the
+two sets of files are different.
 
 Usage
 -----
 
-    rdigest.sh dirname
+    rdigest.pl [options] {pathname...}
+
+The _pathname_ can be a path to either a file or a directory. If a
+directory is specified, all the files under it are processed. If
+multiple _pathnames_ are provided, they are all processed in the order
+supplied.
 
 ### Options
 
---output filename
+--quick
+: Uses the size of files instead of calculating digests of the file's contents.
+Much faster, but less useful (see _Limitations_ section below).
 
-Write digest output to specified file.
+--combine
+: Combines results into a single value, being the total size of all files or digest of all digests.
+
+--verbose
+: Show total number of files processed.
+
+--output filename
+: Write output to specified file.
+
+--help
+: Show a brief help message.
+
+If neither the _quick_ or _combined_ modes are used, the SHA1 digests
+of all the files are calculated.
+
+If both the _quick_ and _combined_ modes are used, the total size of
+all the files is calculated.
+
+Examples
+--------
+
+### Comparing files from two directories
+
+    ./rdigest.pl dir1 --output dir1.dgst
+    ./rdigest.pl dir2 --output dir2.dgst
+	diff dir1.dgst dir2.dgst
+
+If the results are different, then some/all of the the files are
+different between _dir1_ and _dir2_. If the results are the same, then
+they could be considered to be the same (see _Limitations_ for a
+discussion about what "same" actually means).
+
+### Calculating the total size of all files
+
+    ./rdigest.pl --quick --combined dir1 file1 dir2
+
+This example also illustrates that multiple directories and/or files
+can be processed.
+
+### Combined digest of all files
+
+This command returns a single digest value that represents the
+contents and the pathnames of all the files. It is useful as a
+single value that represents all the files.
+
+    ./rdigest.pl --combined dir3
+
+It produces the same output as the following two commands:
+
+    ./rdigest.pl dir3 |	openssl dgst -sha1
+
+Limitations
+-----------
+
+### Files only
+
+Only files are processed. The result is not affected by the presence
+or absence of directories without any files underneath them.
+
+### Quick mode
+
+The quick mode, which only examines the size of files, does not
+provide any guarantees about the contents of the files. Obviously, two
+files can be the same size, but have different contents.
+
+Quick mode is provided for a quick, but not reliable, way of comparing
+files. If the sizes of two files do not match, they will contain
+different contents. But if the sizes of two files match, no conclusion
+can be made about their contents.
+
+The combined quick mode is even less reliable, since it only
+calculates the total of all file sizes. The result is unaffected by
+which files contains those bytes, nor by the presence/absence of zero
+length files.
+
+Requirements
+------------
+
+The script requires Perl.
+
+To calculate SHA1 digests, one of the following must be available:
+
+- The `Digest::SHA1` Perl module; or
+- The `openssl` program.
+
+If only the quick mode is used, neither of these dependencies are
+needed. The quick mode only examines file sizes and does not need to
+calculate SHA1 digests.
+
+The Perl module is preferred because it is much faster than using the
+external program. But both produce the same output.
+
+
+Implementation
+--------------
+
+The _rdigest.pl_ script will use the `Digest::SHA1` Perl module to
+calculate the SHA1 digests, if it is available. If it is not
+available, it will invoke the `openssl` program to calculate the SHA1
+digests.
+
+The Perl module is much faster than invoking an external program.
+
+To see which implementation is being used, run _rdigest.pl_ with the
+`--help` option.
 
 
 Known bugs
 ----------
 
-Shell script version of _rdigest_ does not support long options.
-There is a trade-off between supporting long options vs whitespaces
-in the command line arguments. This is difficult to solve, due to
-the limitations of shell command line argument processing.
+If the `Digest::SHA1` Perl module is not available, the combined
+digest mode is not available. To achieve the same result, create an
+individual file digest and then calculate the SHA1 digest of it.
+
+    ./rdigest.pl pathname |	openssl dgst -sha1
 
 Contact
 -------
 
-Please report bugs and send suggestions to Hoylen Sue <hoylen@hoylen.com>.
+Please report bugs and send suggestions to Hoylen Sue at <hoylen@hoylen.com>.
