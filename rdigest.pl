@@ -12,6 +12,8 @@ use Getopt::Long;
 
 #----------------------------------------------------------------
 
+my $VERSION = '1.1';
+
 my $PROG = basename($0);
 
 # Globals
@@ -92,6 +94,7 @@ sub process_arguments {
     print "  --combine     calculate a single combined value for all files\n";
     print "  --quick       use size of files instead of calculating SHA1\n";
     print "  --verbose     print number of files processed at end\n";
+    print "Version $VERSION\n";
     if ($HAS_DIGEST_SHA1) {
       print "Digest calculator: Digest::SHA1.\n";
     } else {
