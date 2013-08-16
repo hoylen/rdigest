@@ -3,9 +3,6 @@
 use strict;
 use warnings;
 
-eval { require Digest::SHA1; };
-my $HAS_DIGEST_SHA1 = ($@) ? 0 : 1;
-
 use File::Basename;
 use File::Find;
 use Getopt::Long;
@@ -26,6 +23,31 @@ my $combined_sha1 = undef; # only used if (combined_mode && ! quick_mode)
 
 my $num_files = 0;
 
+# Detect SHA1 calculator to use
+
+# The Perl module is preferred since it is much faster than invoking
+# openssl as an separate process. If neither is available, this
+# program can still perform the non-digest operations. The variable
+# $DIGEST_CALCULATOR is either undef (no digest calculator available),
+# the value of $DIGEST_CALCULATOR_PERL_MODULE (when Digest::SHA1 is
+# used), or any other string value (when OpenSSL is used).
+
+my $DIGEST_CALCULATOR_PERL_MODULE = 'Digest::SHA1';
+
+my $DIGEST_CALCULATOR;
+eval { require Digest::SHA1; };
+if (! $@) {
+  $DIGEST_CALCULATOR = $DIGEST_CALCULATOR_PERL_MODULE; # Perl module is used
+} else {
+  my $openssl_ver = `openssl version 2>/dev/null`;
+  if (defined($openssl_ver) && $openssl_ver ne '') {
+    $openssl_ver =~ s/\s+$//;
+    $DIGEST_CALCULATOR = $openssl_ver; # OpenSSL is used
+  } else {
+    $DIGEST_CALCULATOR = undef; # no digest calculator
+  }
+}
+
 #----------------------------------------------------------------
 
 sub process_file {
@@ -45,7 +67,8 @@ sub process_file {
     # Use SHA1 digest of file contents
 
     my $str;
-    if ($HAS_DIGEST_SHA1) {
+    if (defined($DIGEST_CALCULATOR) &&
+	$DIGEST_CALCULATOR eq $DIGEST_CALCULATOR_PERL_MODULE) {
       # Use Perl module
       open(FILE, '<', $filename) || die "Error: $!: $filename\n";
       binmode FILE;
@@ -58,7 +81,8 @@ sub process_file {
     }
 
     if ($combined_mode) {
-      if ($HAS_DIGEST_SHA1) {
+      if (defined($DIGEST_CALCULATOR) &&
+	  $DIGEST_CALCULATOR eq $DIGEST_CALCULATOR_PERL_MODULE) {
         $combined_sha1->add($str);
       } else {
         print COMBINE $str;
@@ -91,16 +115,15 @@ sub process_arguments {
     print "Options:\n";
     print "  --help        show this help message\n";
     print "  --output dir  file to write digests to\n";
-    print "  --combine     calculate a single combined value for all files\n";
-    print "  --quick       use size of files instead of calculating SHA1\n";
+    print "  --combined    calculate a single combined value for all files\n";
+    print "  --quick       use size of files instead of calculating digests\n";
     print "  --verbose     print number of files processed at end\n";
-    print "Version $VERSION\n";
-    if ($HAS_DIGEST_SHA1) {
-      print "Digest calculator: Digest::SHA1.\n";
+    print "Version: $VERSION\n";
+    print "Digest calculator: ";
+    if (defined($DIGEST_CALCULATOR)) {
+      print "$DIGEST_CALCULATOR\n";
     } else {
-      my $openssl_ver = `openssl version`;
-      print "Digest calculator: $openssl_ver";
-      print "(Install Digest::SHA1 Perl module to improve performance.)\n";
+      print "none (digest calculating operations are not available)\n";
     }
     exit(0);
   }
@@ -143,12 +166,20 @@ sub main {
     if ($quick_mode) {
       $combined_size = 0;
     } else {
-      if ($HAS_DIGEST_SHA1) {
-	$combined_sha1 = Digest::SHA1->new;
+      if (defined($DIGEST_CALCULATOR)) {
+	if ($DIGEST_CALCULATOR eq $DIGEST_CALCULATOR_PERL_MODULE) {
+	  $combined_sha1 = Digest::SHA1->new;
+	} else {
+	  open(COMBINE, "|openssl dgst -sha1 | sed -e 's/(stdin)\= //'") || 
+	      die "Error: openssl: $!\n";
+	}
       } else {
-        open(COMBINE, "|openssl dgst -sha1 | sed -e 's/(stdin)\= //'") || 
-          die "Error: openssl: $!\n";
+	die "Internal error: no digest calculator: operation not supported\n";
       }
+    }
+  } else {
+    if (! $quick_mode && ! defined($DIGEST_CALCULATOR)) {
+      die "Internal error: no digest calculator: operation not supported\n";
     }
   }
   $num_files = 0;
@@ -166,7 +197,8 @@ sub main {
     if ($quick_mode) {
       print $combined_size, (($combined_size == 1) ? ' byte' : ' bytes'), "\n";
     } else {
-      if ($HAS_DIGEST_SHA1) {
+      if (defined($DIGEST_CALCULATOR) &&
+	  $DIGEST_CALCULATOR eq $DIGEST_CALCULATOR_PERL_MODULE) {
         print $combined_sha1->hexdigest, "\n";
       } else {
         close(COMBINE);
