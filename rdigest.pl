@@ -56,7 +56,11 @@ sub process_file {
     }
 
     if ($combined_mode) {
-      $combined_sha1->add($str);
+      if ($HAS_DIGEST_SHA1) {
+        $combined_sha1->add($str);
+      } else {
+        print COMBINE $str;
+      }
     } else {
       print $str;
     }
@@ -139,7 +143,8 @@ sub main {
       if ($HAS_DIGEST_SHA1) {
 	$combined_sha1 = Digest::SHA1->new;
       } else {
-	die "Internal error: Digest::SHA1 module not available: cannot use combined sha1\n";
+        open(COMBINE, "|openssl dgst -sha1 | sed -e 's/(stdin)\= //'") || 
+          die "Error: openssl: $!\n";
       }
     }
   }
@@ -158,7 +163,11 @@ sub main {
     if ($quick_mode) {
       print $combined_size, (($combined_size == 1) ? ' byte' : ' bytes'), "\n";
     } else {
-      print $combined_sha1->hexdigest, "\n";
+      if ($HAS_DIGEST_SHA1) {
+        print $combined_sha1->hexdigest, "\n";
+      } else {
+        close(COMBINE);
+      }
     }
   }
 
