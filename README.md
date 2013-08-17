@@ -115,21 +115,31 @@ If the quick mode is used, neither of these dependencies are
 required. The quick mode only examines file sizes and does not need to
 calculate SHA1 digests.
 
-Both digest calculators produce the same output, but the Perl module
-is preferred because it is usually faster than using the external
-program. The difference in performance increases as the number of
-files increases, since each file processed involves forking a separate
-process to run _openssl_.  But the _openssl_ digest calculator is
-faster (about twice as fast) when there are very few and very large
-files.
-
-If you have many small files and your installation of Perl does not
-have the Digest::SHA1 module, consider installing the module in your
-local account.
-
 To see which SHA1 implementation will be used, run _rdigest.pl_ with
 the `--help` option.
 
+### Performance
+
+Both digest calculators produce the same output, but the Perl module
+is preferred because it is usually faster.
+
+The _Digest::SHA1_ Perl module is much faster when there are many
+small files.  The difference in performance increases as the number of
+files increases, since each file processed involves forking a separate
+process to run _openssl_.  If there are many small files consider
+installing the Digest::SHA1 Perl module (either in the system
+or in the local account) to speed up the calculations.
+
+The _openssl_ digest calculator is faster (about twice as fast) when
+there are very few and very large files.  If there are a small number
+of very large files, it might be faster to use _openssl_ directly:
+
+    openssl dgst -sha1 `find dirname -type f`
+
+The above command will produce the same output as `rdigest.pl
+dirname`. When there are many files under _dirname_, besides being
+slower, the above command will not work (due to limits on the size of
+command lines).
 
 Contact
 -------
