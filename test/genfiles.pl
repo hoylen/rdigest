@@ -2,6 +2,9 @@
 #
 # Generates test files
 
+use strict;
+use warnings;
+
 use File::Basename;
 use File::Path qw(make_path remove_tree);
 use Getopt::Long;
@@ -10,8 +13,9 @@ use Getopt::Long;
 
 my $PROG = basename($0);
 
-my $MAX_NUM_FILES = 4000000; my $DEFAULT_NUM_FILES = 1; my
-$DEFAULT_SIZE = '1KB';
+my $MAX_NUM_FILES = 4000000;
+my $DEFAULT_NUM_FILES = 1;
+my $DEFAULT_SIZE = '1KB';
 
 #----------------------------------------------------------------
 
@@ -21,7 +25,7 @@ sub make_file {
   open(FILE, '>', $fname) || die "Error: $!: $fname\n";
 
   for (my $x = 0; $x < $fsize; $x++) {
-    printf FILE 'x';
+    print FILE chr(int(rand(256)));
   }
 
   close(FILE);
@@ -68,7 +72,8 @@ sub generate {
 #----------------------------------------------------------------
 
 sub process_arguments {
-  my ($num_files_ref, $size_ref, $output_ref, $force_ref, $verbose_ref) = @_;
+  my ($num_files_ref, $size_ref, $seed_ref,
+      $output_ref, $force_ref, $verbose_ref) = @_;
   my $help;
   my $size_str = $DEFAULT_SIZE;
 
@@ -77,6 +82,7 @@ sub process_arguments {
   if (! GetOptions('verbose' => $verbose_ref,
 		   'number=s' => $num_files_ref,
 		   'size=s' => \$size_str,
+		   'randomseed=s' => $seed_ref,
 		   'output=s' => $output_ref,
 		   'force' => $force_ref,
 		   'help' => \$help)) {
@@ -86,11 +92,12 @@ sub process_arguments {
   if ($help) {
     print "Usage: $PROG [options]\n";
     print "Options:\n";
-    print "  --help        show this help message\n";
-    print "  --number num  number of files to create (default: $DEFAULT_NUM_FILES)\n";
-    print "  --size num    size of files to create (default: $DEFAULT_SIZE)\n";
-    print "  --output dir  directory\n";
-    print "  --force       delete existing directory if it already exists\n";
+    print "  --help          show this help message\n";
+    print "  --number num    number of files to create (default: $DEFAULT_NUM_FILES)\n";
+    print "  --size num      size of created files (default: $DEFAULT_SIZE)\n";
+    print "  --randomseed s  fixed seed number for random number generator\n";
+    print "  --output dir    directory\n";
+    print "  --force         delete existing directory if it already exists\n";
     print "  --verbose\n";
     exit(0);
   }
@@ -120,6 +127,12 @@ sub process_arguments {
     die "Usage error: invalid file size: $size_str\n";
   }
 
+  # Check seed
+
+  if (defined($$seed_ref) && $$seed_ref !~ /^\d+$/) {
+    die "Usage error: seed must be an integer: $$seed_ref\n";
+  }
+
   # Output directory
 
   if (! defined($$output_ref)) {
@@ -136,7 +149,14 @@ sub process_arguments {
 #----------------------------------------------------------------
 
 sub main {
-  process_arguments(\$num_files, \$file_size, \$output, \$force, \$verbose);
+  my $num_files;
+  my $file_size;
+  my $seed;
+  my $output;
+  my $force;
+  my $verbose;
+  process_arguments(\$num_files, \$file_size, \$seed,
+		    \$output, \$force, \$verbose);
 
   if (-e $output) {
     # Output already exists
@@ -155,6 +175,12 @@ sub main {
 
   if ($verbose) {
     print "Generating $num_files files; each contain $file_size bytes\n";
+  }
+
+  # Set random number seed for deterministic result (if specified)
+
+  if (defined($seed)) {
+    srand($seed);
   }
 
   generate($num_files, $file_size, $output, $verbose);

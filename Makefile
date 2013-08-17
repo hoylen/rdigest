@@ -32,20 +32,20 @@ out/t1:
 
 
 out/t1-ref-ind.sha1: out/t1 test/rdigest.sh
-	@echo "Test 1: creating reference individual digests"
+	@echo "Test 1: generating reference individual digests"
 	@test/rdigest.sh -o "$@" out/t1
 
 out/t1-ref-ind.size: out/t1
-	@echo "Test 1: creating reference individual sizes"
+	@echo "Test 1: generating reference individual sizes"
 	@find out/t1 -type f -exec ls -l {} \; | \
 	  awk -F " " '{print "SIZE(" $$9 ")= " $$5}' > "$@"
 
 out/t1-ref-com.sha1: out/t1-ref-ind.sha1
-	@echo "Test 1: creating reference com digest"
+	@echo "Test 1: generating reference combined digest"
 	@openssl dgst -sha1 "$<" | sed -e 's/^.*1)= //' > "$@"
 
 out/t1-ref-com.size: out/t1-ref-ind.size
-	@echo "Test 1: creating reference com sizes"
+	@echo "Test 1: generating reference combined sizes"
 	@awk -F '\\)\= ' \
 	    'BEGIN{x=0}{x=x+$$2}END{print x " bytes"}' "$<" > "$@"
 
