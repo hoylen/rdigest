@@ -97,8 +97,8 @@ can be made about their contents.
 
 The combined quick mode is even less reliable, since it only
 calculates the total of all file sizes. The result is unaffected by
-which files contains those bytes, nor by the presence/absence of zero
-length files.
+which files contains those bytes, nor by the presence or absence of
+zero length files.
 
 Requirements
 ------------
@@ -111,27 +111,25 @@ To calculate SHA1 digests, at least one of the following is required:
   Perl module; or
 - The [openssl](http://www.openssl.org) program.
 
-If only the quick mode is used, neither of these dependencies are
+If the quick mode is used, neither of these dependencies are
 required. The quick mode only examines file sizes and does not need to
 calculate SHA1 digests.
 
-Both produce the same output, but the Perl module is preferred because
-it is much faster than using the external program. If your
-installation of Perl does not have it, consider installing the module
-in your local account.
+Both digest calculators produce the same output, but the Perl module
+is preferred because it is usually faster than using the external
+program. The difference in performance increases as the number of
+files increases, since each file processed involves forking a separate
+process to run _openssl_.  But the _openssl_ digest calculator is
+faster (about twice as fast) when there are very few and very large
+files.
+
+If you have many small files and your installation of Perl does not
+have the Digest::SHA1 module, consider installing the module in your
+local account.
 
 To see which SHA1 implementation will be used, run _rdigest.pl_ with
 the `--help` option.
 
-
-Known bugs
-----------
-
-If the `Digest::SHA1` Perl module is not available, the combined
-digest mode is not available. To achieve the same result, create an
-individual file digest and then calculate the SHA1 digest of it.
-
-    ./rdigest.pl pathname |	openssl dgst -sha1
 
 Contact
 -------
