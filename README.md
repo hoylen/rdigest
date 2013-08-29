@@ -57,13 +57,6 @@ different between _dir1_ and _dir2_. If the results are the same, then
 they could be considered to be the same (see _Limitations_ for a
 discussion about what "same" actually means).
 
-### Calculating the total size of all files
-
-    ./rdigest.pl --quick --combined dir1 file1 dir2
-
-This example also illustrates that multiple directories and/or files
-can be processed.
-
 ### Combined digest of all files
 
 This command returns a single digest value that represents the
@@ -75,6 +68,29 @@ single value that represents all the files.
 It produces the same output as the following two commands:
 
     ./rdigest.pl dir3 |	openssl dgst -sha1
+
+Since the combined digest can be created from the individual files
+digest output, it is usually a good idea to run the command in
+individual file mode and saving the results to an output file. Both
+combined and individual files digests are then available without
+needing to reprocessing the files.
+
+### Calculating the total size of all files
+
+    ./rdigest.pl --quick --combined dir1 file1 dir2
+
+This example also illustrates that multiple directories and/or files
+can be processed.
+
+It produces the same output as the following two commands:
+
+    ./rdigest.pl --quick dir1 file1 dir2 | awk -F '\\)= '  '{X=X+$2} END{print X}'
+
+Since the combined total size can be calculated from the individual
+file sizes output, it is usually a good idea to run the command
+individual file mode and saving the results to an output file. Both
+combined and individual files sizes are then available without needing
+to reprocess the files.
 
 Limitations
 -----------
@@ -137,9 +153,9 @@ of very large files, it might be faster to use _openssl_ directly:
     openssl dgst -sha1 `find dirname -type f`
 
 The above command will produce the same output as `rdigest.pl
-dirname`. When there are many files under _dirname_, besides being
-slower, the above command will not work (due to limits on the size of
-command lines).
+dirname`. When there are many files under _dirname_, the above command
+will not work (due to limits on the size of command lines) -- which
+was the reason why this script was initially written.
 
 Contact
 -------
