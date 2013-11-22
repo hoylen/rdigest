@@ -77,7 +77,7 @@ sub process_file {
       $str = 'SHA1(' . $File::Find::name . ')= ' . $sha1->hexdigest . "\n";
       close(FILE);
     } else {
-      $str = `openssl dgst -sha1 "$filename"`;
+      $str = `openssl dgst -sha1 '$filename'`;
     }
 
     if ($combined_mode) {
