@@ -5,12 +5,13 @@ Calculates digest of files recursively found under directories.
 
 This script is useful for comparing sets of files, to see if they are
 the same or not. If the output of the script is different, then the
-two sets of files are different.
+two sets of files are different. For example, checking if a copy is
+the same as the original.
 
 Usage
 -----
 
-    rdigest.pl [options] {pathname...}
+    rdigest [options] {pathname...}
 
 The _pathname_ can be a path to either a file or a directory. If a
 directory is specified, all the files under it are processed. If
@@ -23,8 +24,8 @@ supplied.
 : Uses the size of files instead of calculating digests of the file's contents.
 Much faster, but less useful (see _Limitations_ section below).
 
-`--combined`
-: Combines results into a single value, being the total size of all files or digest of all digests.
+`--baseless`
+: Output filenames without the base path.
 
 `--verbose`
 : Show total number of files processed.
@@ -35,127 +36,30 @@ Much faster, but less useful (see _Limitations_ section below).
 `--help`
 : Show a brief help message.
 
-These options can be abbreviated (e.g. `-c` for `--combined`).
-
-If neither the _quick_ or _combined_ modes are used, the SHA1 digests
-of all the files are calculated.
-
-If both the _quick_ and _combined_ modes are used, the total size of
-all the files is calculated.
+These options can be abbreviated (e.g. `-q` for `--quick`).
 
 Examples
 --------
 
 ### Comparing files from two directories
 
-    ./rdigest.pl dir1 --output dir1.dgst
-    ./rdigest.pl dir2 --output dir2.dgst
-	diff dir1.dgst dir2.dgst
+    ./rdigest.pl --output dir1.dgst --baseless dir1
+    ./rdigest.pl --output dir2.dgst --baseless dir2
+    diff dir1.dgst dir2.dgst
 
 If the results are different, then some/all of the the files are
 different between _dir1_ and _dir2_. If the results are the same, then
 they could be considered to be the same (see _Limitations_ for a
 discussion about what "same" actually means).
 
-### Combined digest of all files
-
-This command returns a single digest value that represents the
-contents and the pathnames of all the files. It is useful as a
-single value that represents all the files.
-
-    ./rdigest.pl --combined dir3
-
-It produces the same output as the following two commands:
-
-    ./rdigest.pl dir3 |	openssl dgst -sha1
-
-Since the combined digest can be created from the individual files
-digest output, it is usually a good idea to run the command in
-individual file mode and saving the results to an output file. Both
-combined and individual files digests are then available without
-needing to reprocessing the files.
-
-### Calculating the total size of all files
-
-    ./rdigest.pl --quick --combined dir1 file1 dir2
-
-This example also illustrates that multiple directories and/or files
-can be processed.
-
-It produces the same output as the following two commands:
-
-    ./rdigest.pl --quick dir1 file1 dir2 | awk -F '\\)= '  '{X=X+$2} END{print X}'
-
-Since the combined total size can be calculated from the individual
-file sizes output, it is usually a good idea to run the command
-individual file mode and saving the results to an output file. Both
-combined and individual files sizes are then available without needing
-to reprocess the files.
-
-Limitations
------------
-
-### Files only
-
-Only files are processed. The result is not affected by the presence
-or absence of directories without any files underneath them.
-
-### Quick mode
-
-The quick mode, which only examines the size of files, does not
-provide any guarantees about the contents of the files. Obviously, two
-files can be the same size, but have different contents.
-
-Quick mode is provided for a quick, but not reliable, way of comparing
-files. If the sizes of two files do not match, they will contain
-different contents. But if the sizes of two files match, no conclusion
-can be made about their contents.
-
-The combined quick mode is even less reliable, since it only
-calculates the total of all file sizes. The result is unaffected by
-which files contains those bytes, nor by the presence or absence of
-zero length files.
+If the _baseless_ option was not specified, the directory names "dir1"
+and "dir2" will be included in the entries, which will mean the _diff_
+will always be different.
 
 Requirements
 ------------
 
-The script requires [Perl](http://www.perl.org).
-
-To calculate SHA1 digests, at least one of the following is required:
-
-- The [Digest::SHA1](http://search.cpan.org/~gaas/Digest-SHA1-2.13/SHA1.pm)
-  Perl module; or
-- The [openssl](http://www.openssl.org) program.
-
-If the quick mode is used, neither of these dependencies are
-required. The quick mode only examines file sizes and does not need to
-calculate SHA1 digests.
-
-To see which SHA1 implementation will be used, run _rdigest.pl_ with
-the `--help` option.
-
-### Performance
-
-Both digest calculators produce the same output, but the Perl module
-is preferred because it is usually faster.
-
-The _Digest::SHA1_ Perl module is much faster when there are many
-small files.  The difference in performance increases as the number of
-files increases, since each file processed involves forking a separate
-process to run _openssl_.  If there are many small files consider
-installing the Digest::SHA1 Perl module (either in the system
-or in the local account) to speed up the calculations.
-
-The _openssl_ digest calculator is faster (about twice as fast) when
-there are very few and very large files.  If there are a small number
-of very large files, it might be faster to use _openssl_ directly:
-
-    openssl dgst -sha1 `find dirname -type f`
-
-The above command will produce the same output as `rdigest.pl
-dirname`. When there are many files under _dirname_, the above command
-will not work (due to limits on the size of command lines) -- which
-was the reason why this script was initially written.
+- OpenSSL development libraries.
 
 Contact
 -------

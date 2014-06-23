@@ -4,7 +4,20 @@
 
 help:
 	@echo "Targets:"
-	@echo "  test - run tests"
+	@echo "  build    compile program"
+	@echo "  test     run tests"
+	@echo "  clean    delete generated files"
+
+#----------------------------------------------------------------
+
+build: rdigest
+
+rdigest: rdigest.cpp
+	g++ -Wall -O2 rdigest.cpp -o "$@" -lssl -lcrypto
+
+# On Linux, gcc and OpenSSL libraries are required:
+#   sudo yum -y install gcc-c++
+#   sudo yum -y install openssl-devel
 
 #----------------------------------------------------------------
 # Tests
@@ -13,18 +26,12 @@ test: test1
 
 test1: out/t1 \
 	  out/t1-ref-ind.sha1 out/t1-ref-ind.size \
-	  out/t1-ref-com.sha1 out/t1-ref-com.size \
-	  out/t1-ind.sha1 out/t1-ind.size \
-	  out/t1-com.sha1 out/t1-com.size
+	  out/t1-ind.sha1 out/t1-ind.size
 	@echo "Test 1: checking results"
 	@diff out/t1-ref-ind.sha1 out/t1-ind.sha1 > out/t1-ind.sha1.diff || \
 	  echo "Test failed: see out/t1-ind.sha1.diff"
 	@diff out/t1-ref-ind.size out/t1-ind.size > out/t1-ind.size.diff || \
 	  echo "Test failed: see out/t1-ind.size.diff"
-	@diff out/t1-ref-com.sha1 out/t1-com.sha1 > out/t1-com.sha1.diff || \
-	  echo "Test failed: see out/t1-com.sha1.diff"
-	@diff out/t1-ref-com.size out/t1-com.size > out/t1-com.size.diff || \
-	  echo "Test failed: see out/t1-com.size.diff"
 
 out/t1:
 	@echo "Test 1: creating test data"
@@ -40,35 +47,20 @@ out/t1-ref-ind.size: out/t1
 	@find out/t1 -type f -exec ls -l {} \; | \
 	  awk -F " " '{print "SIZE(" $$9 ")= " $$5}' > "$@"
 
-out/t1-ref-com.sha1: out/t1-ref-ind.sha1
-	@echo "Test 1: generating reference combined digest"
-	@openssl dgst -sha1 "$<" | sed -e 's/^.*1)= //' > "$@"
 
-out/t1-ref-com.size: out/t1-ref-ind.size
-	@echo "Test 1: generating reference combined sizes"
-	@awk -F '\\)\= ' \
-	    'BEGIN{x=0}{x=x+$$2}END{print x " bytes"}' "$<" > "$@"
-
-
-out/t1-ind.sha1: out/t1 rdigest.pl
+out/t1-ind.sha1: out/t1 rdigest
 	@echo "Test 1: calculating individual digests"
-	@./rdigest.pl --output "$@" out/t1
+	@./rdigest --output "$@" out/t1
 
-out/t1-ind.size: out/t1 rdigest.pl
+out/t1-ind.size: out/t1 rdigest
 	@echo "Test 1: calculating individual sizes"
-	@./rdigest.pl --output "$@" --quick out/t1
-
-out/t1-com.sha1: out/t1 rdigest.pl
-	@echo "Test 1: calculating combined digest"
-	@./rdigest.pl --output "$@" --combine out/t1
-
-out/t1-com.size: out/t1 rdigest.pl
-	@echo "Test 1: calculating combined size"
-	@./rdigest.pl --output "$@" --combine --quick out/t1
+	@./rdigest --output "$@" --quick out/t1
 
 #----------------------------------------------------------------
 
 clean:
+	rm -f *~
+	rm -rf rdigest
 	rm -rf out
 
 #EOF

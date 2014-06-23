@@ -1,0 +1,99 @@
+.\"man mdoc.samples for a complete listing of options
+.\"man mdoc for the short list of editing options
+.\"/usr/share/misc/mdoc.template
+.Dd 06/06/2014               \" DATE 
+.Dt rdigest 1      \" Program name and manual section number 
+.Sh NAME                 \" Section Header - required - don't modify 
+.Nm rdigest
+.Nd calculates digest of files recursively found under directories.
+.Sh SYNOPSIS             \" Section Header - required - don't modify
+.Nm
+.Op Fl qhbv
+.Op Fl o Ar outfile
+fileOrDirectory ...
+.Sh DESCRIPTION          \" Section Header - required - don't modify
+Recursively examines the contents of directories and generates a summary report
+of their contents. The report can contains the SHA-1 digest of the contents of
+the files, so that changes can be detected.
+.Pp
+This program is useful for comparing sets of files, to see if they are
+the same or not. If the output of the script is different then the two
+sets of files are different.
+.Pp
+A list of flags and their descriptions:
+.Bl -tag -width -indent  \" Differs from above in tag removed 
+.It Fl q | Fl Fl quick  \"-a flag as a list item
+Produce a report using file sizes instead of digests.  This is much
+faster, because the contents of the files are not examined. But the
+report cannot be used to detect changes to the file's contents if the
+change does not affect the file's size.
+.It Fl b | Fl Fl baseless
+Do not include pathnames with the specified directory in the results.
+.It Fl o | Fl Fl output Ar outfile
+Write report to given output file. Default is to
+.Em stdout .
+.It Fl v | Fl Fl verbose
+Output additional statistics at the end of the run.
+.It Fl h | Fl Fl help
+Show a brief summary of the options.
+.El                      \" Ends the list
+.Sh REPORT FORMAT
+The report consists one entry per line. Each entry consists of the
+entry type followed by a left parenthesis, the file name, right
+parenthesis and the value. The value consists of an equal sign, space,
+and the encoded value.
+.Pp
+For digest entries, the entry type is "SHA1" and the encoded value is
+the SHA-1 digest value represented in hexadecimal.
+.Pp
+If the quick mode is used, size entries are produced instead of digest
+entries.  Size entries have the entry type of "SIZE" and the encoded
+value is the number of bytes in decimal.
+.Pp
+Symbolic links appear as "SYMLINK" entries, where the encoded value is
+the path it links to.
+.Pp
+Empty directories appear as "EMPTY_DIRECTORY" entries, without any
+value. Non-empty directories do not appear as a separate entries,
+since their existance is implicitly represented by the entries for the
+files and/or directories under it.
+.Sh EXAMPLES
+
+rdigest dir1 --output report1.sha1
+rdigest dir2 --output report2.sha1
+diff report1.sha1 report2.sha1
+
+rdigest dir1 --quick --output report1.size
+
+.Sh FILES                \" File used or created by the topic of the man page
+.Bl -tag -width "/usr/local/bin/rdigest" -compact
+.It Pa /usr/local/bin/rdigest
+Executable program
+.El                      \" Ends the list
+.\" .Sh DIAGNOSTICS       \" May not be needed
+.\" .Bl -diag
+.\" .It Diagnostic Tag
+.\" Diagnostic informtion here.
+.\" .It Diagnostic Tag
+.\" Diagnostic informtion here.
+.\" .El
+.Sh SEE ALSO 
+.\" List links in ascending order by section, alphabetically within a section.
+.\" Please do not reference files that do not exist without filing a bug report
+.Xr openssl 1 , 
+.Xr dgst 1 ,
+.Sh BUGS              \" Document known, unremedied bugs 
+Only ordinary files, directories and symbolic links are handled. Other
+types of files (e.g. sockets, FIFOs, character and block devices) are
+not expected under normal use and are not handled.
+.Pp
+Only the file name and file contents (or just its size, if quick mode
+is used) is used. Other file properties (such as dates, permissions
+and extended attributes) are not used in the report.
+.Sh HISTORY           \" Document history if command behaves in a unique manner
+The digest entry is the same as the output produced by the 
+.Em openssl dgst -sha1
+OpenSSL digest command.  This program was originally written to
+generate a report for all the files under a directory, because the
+OpenSSL digest command could not recursively scan a directory for
+files and there was a limit to the number of command line arguments.
